@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Code Gate (prototype)",
+  "version": "0.1.0",
+  "description": "Startup gate for Chromium using one-time codes issued by an administrator.",
+  "permissions": ["storage", "tabs", "declarativeNetRequest", "alarms"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": { "service_worker": "background.js" },
+  "chrome_url_overrides": { "newtab": "gate.html" }
+}

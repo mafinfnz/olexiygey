@@ -1,0 +1,5 @@
+extension/fonts/*.otf
+.env
+.env.*
+.vercel
+node_modules

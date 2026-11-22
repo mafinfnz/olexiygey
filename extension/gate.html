@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f5f5f7">
+  <title>Вход по коду</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="access" aria-labelledby="title">
+    <h1 id="title">Вход по коду</h1>
+    <p class="intro">Попросите владельца устройства создать одноразовый код доступа.</p>
+    <form id="form" novalidate>
+      <label class="sr-only" for="code">Шестизначный код</label>
+      <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Введите код" aria-describedby="status">
+      <button type="submit">Продолжить</button>
+    </form>
+    <div id="status" role="status" aria-live="polite"></div>
+    <details class="settings">
+      <summary>Настройки подключения</summary>
+      <label class="server-label" for="server">Адрес сервера</label>
+      <input id="server" placeholder="https://ваш-сервер">
+      <button id="save" class="secondary" type="button">Сохранить адрес</button>
+    </details>
+    <p class="footnote">Код одноразовый и действует 5 минут.</p>
+  </main>
+  <script src="gate.js"></script>
+</body>
+</html>
