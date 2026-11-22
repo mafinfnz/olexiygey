@@ -1,9 +1,10 @@
 import { body, command, digest, json, newSession, preflight } from './_lib.js';
 
 const consumeCode = `
-  local code = redis.call('GETDEL', KEYS[1])
   if redis.call('GET', KEYS[2]) == '1' then return 0 end
+  local code = redis.call('GET', KEYS[1])
   if not code or code ~= ARGV[1] then return -1 end
+  redis.call('DEL', KEYS[1])
   return 1
 `;
 
