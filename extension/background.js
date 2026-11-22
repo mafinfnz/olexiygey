@@ -10,10 +10,19 @@ async function lockBrowser() {
       condition: { urlFilter: 'http', resourceTypes: ['main_frame'] }
     }]
   });
+  await chrome.storage.local.set({ locked: true });
 }
 async function unlockBrowser() {
   await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [LOCK_RULE_ID] });
+  await chrome.storage.local.set({ locked: false });
 }
+chrome.tabs.onCreated.addListener(async (tab) => {
+  if (tab.id == null || tab.url === GATE || tab.pendingUrl === GATE) return;
+  const { locked = true } = await chrome.storage.local.get('locked');
+  if (locked) {
+    try { await chrome.tabs.update(tab.id, { url: GATE }); } catch { /* Tab may have closed. */ }
+  }
+});
 chrome.runtime.onStartup.addListener(async () => {
   await lockBrowser();
   chrome.alarms.create('session-check', { periodInMinutes: 0.5 });

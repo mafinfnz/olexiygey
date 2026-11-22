@@ -5,6 +5,5 @@
   "description": "Startup gate for Chromium using one-time codes issued by an administrator.",
   "permissions": ["storage", "tabs", "declarativeNetRequest", "alarms"],
   "host_permissions": ["http://*/*", "https://*/*"],
-  "background": { "service_worker": "background.js" },
-  "chrome_url_overrides": { "newtab": "gate.html" }
+  "background": { "service_worker": "background.js" }
 }
