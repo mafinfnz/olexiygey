@@ -2,4 +2,9 @@ extension/fonts/*.otf
 .env
 .env.*
 .vercel
+.vercel-cli-config/
+.gh-config/
 node_modules
+
+.vercel
+.env*
