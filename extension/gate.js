@@ -7,10 +7,32 @@ codeInput.addEventListener('input', () => {
   if (codeInput.value !== digitsOnly) codeInput.value = digitsOnly;
 });
 
-chrome.storage.local.get('token', ({token}) => {
-  if (token) fetch(`${SERVER}/api/session`, {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token})})
-    .then(async r => { if (r.ok) { await chrome.runtime.sendMessage({type:'UNLOCK'}); location.replace('chrome://newtab'); } else { await chrome.storage.local.remove('token'); } }).catch(()=>{});
-});
+async function restoreExistingSession() {
+  try {
+    const {token} = await chrome.storage.local.get('token');
+    if (!token) return;
+
+    const response = await fetch(`${SERVER}/api/session`, {
+      method: 'POST',
+      headers: {'content-type': 'application/json'},
+      body: JSON.stringify({token})
+    });
+    if (!response.ok) {
+      await chrome.storage.local.remove('token');
+      return;
+    }
+
+    const result = await chrome.runtime.sendMessage({type: 'UNLOCK'});
+    if (!result?.ok) throw new Error('Не удалось восстановить доступ.');
+
+    const currentTab = await chrome.tabs.getCurrent();
+    if (currentTab?.id != null) await chrome.tabs.update(currentTab.id, {url: 'chrome://newtab'});
+  } catch {
+    $('status').textContent = 'Не удалось восстановить доступ. Введите код ещё раз.';
+  }
+}
+
+restoreExistingSession();
 $('form').onsubmit = async (e) => {
   e.preventDefault();
   const enteredCode = codeInput.value;
@@ -30,3 +52,4 @@ $('form').onsubmit = async (e) => {
     $('status').textContent = 'Доступ открыт. Теперь поиск и сайты доступны.';
   } catch(err) { $('status').textContent = err.message === 'Failed to fetch' ? 'Нет связи с сервером.' : /invalid or expired code/i.test(err.message) ? 'Неправильный код' : err.message; }
 };
+
