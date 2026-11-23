@@ -12,6 +12,7 @@
   <main class="access" aria-labelledby="title">
     <h1 id="title">Вход по коду</h1>
     <p class="intro">Попросите владельца устройства создать одноразовый код доступа.</p>
+    <p id="incognito-warning" class="footnote" hidden>Чтобы блокировка работала в Incognito, включите для Code Gate разрешение «Разрешить использование в режиме инкогнито» в настройках расширений.</p>
     <form id="form" novalidate>
       <label class="sr-only" for="code">Шестизначный код</label>
       <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="6" placeholder="Введите код" aria-describedby="status">
@@ -23,3 +24,4 @@
   <script src="gate.js"></script>
 </body>
 </html>
+
