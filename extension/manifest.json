@@ -1,10 +1,1 @@
-{
-  "manifest_version": 3,
-  "name": "Code Gate",
-  "version": "0.1.4",
-  "description": "Startup gate for Chromium using one-time codes issued by an administrator.",
-  "permissions": ["storage", "tabs", "declarativeNetRequest", "alarms"],
-  "host_permissions": ["http://*/*", "https://*/*"],
-  "background": { "service_worker": "background.js" },
-  "action": { "default_title": "Code Gate", "default_popup": "popup.html" }
-}
+YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éí×}Ó¢Ö¥¢ëiºÙbë5{wÚÚ$z{-®éÜj×
