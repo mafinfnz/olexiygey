@@ -1,26 +1,34 @@
 import { randomBytes } from 'node:crypto';
 import { authorized, command, json, preflight } from '../_lib.js';
 
+const lockState = `
+  if redis.call('GET', KEYS[1]) == '1' then
+    local requestId = redis.call('GET', KEYS[3]) or ''
+    local ack = redis.call('GET', KEYS[4]) or ''
+    redis.call('DEL', KEYS[5])
+    return {1, requestId, requestId ~= '' and ack == requestId and 1 or 0}
+  end
+  redis.call('INCR', KEYS[2])
+  redis.call('SET', KEYS[1], '1')
+  redis.call('SET', KEYS[3], ARGV[1])
+  redis.call('DEL', KEYS[4], KEYS[5])
+  return {0, ARGV[1], 0}
+`;
+
 export default async function handler(req, res) {
   if (preflight(req, res)) return;
   if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' });
   if (!authorized(req)) return json(res, 401, { error: 'unauthorized' });
   try {
-    const locked = await command('GET', 'cg:locked');
-    if (locked === '1') {
-      const requestId = await command('GET', 'cg:lock_request_id');
-      const acknowledged = requestId ? await command('GET', 'cg:lock_ack') === requestId : false;
-      await command('DEL', 'cg:active_code');
-      return json(res, 200, { locked: true, alreadyLocked: true, requestId: requestId || null, acknowledged });
-    }
-
     const requestId = randomBytes(16).toString('hex');
-    await command('INCR', 'cg:generation');
-    await command('SET', 'cg:locked', '1');
-    await command('SET', 'cg:lock_request_id', requestId);
-    await command('DEL', 'cg:lock_ack');
-    await command('DEL', 'cg:active_code');
-    return json(res, 200, { locked: true, requestId });
+    const result = await command('EVAL', lockState, 5, 'cg:locked', 'cg:generation', 'cg:lock_request_id', 'cg:lock_ack', 'cg:active_code', requestId);
+    const [alreadyLocked, currentRequestId, acknowledged] = result;
+    return json(res, 200, {
+      locked: true,
+      alreadyLocked: Number(alreadyLocked) === 1,
+      requestId: currentRequestId || null,
+      acknowledged: Number(acknowledged) === 1
+    });
   } catch (error) {
     return json(res, 503, { error: error.message || 'storage unavailable' });
   }
