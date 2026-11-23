@@ -2,11 +2,10 @@
   "manifest_version": 3,
   "incognito": "split",
   "name": "Code Gate",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Startup gate for Chromium using one-time codes issued by an administrator.",
   "permissions": ["storage", "tabs", "declarativeNetRequest", "alarms"],
   "host_permissions": ["http://*/*", "https://*/*"],
   "background": { "service_worker": "background.js" },
   "action": { "default_title": "Code Gate" }
 }
-

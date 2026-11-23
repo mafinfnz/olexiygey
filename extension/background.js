@@ -1,9 +1,19 @@
 const GATE = chrome.runtime.getURL('gate.html');
 const SERVER = 'https://olexiygey.vercel.app';
 const LOCK_RULE_ID = 1;
+const ADMIN_ALLOW_RULE_ID = 2;
 
 function isGateUrl(url) {
   return url === GATE;
+}
+
+function isAdminUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.origin === SERVER && (parsed.pathname === '/admin' || parsed.pathname === '/admin.html');
+  } catch {
+    return false;
+  }
 }
 
 function isNewTabUrl(url) {
@@ -13,13 +23,21 @@ function isNewTabUrl(url) {
 async function lockBrowser() {
   await chrome.storage.local.set({ locked: true });
   await chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: [LOCK_RULE_ID],
-    addRules: [{
-      id: LOCK_RULE_ID,
-      priority: 1,
-      action: { type: 'redirect', redirect: { extensionPath: '/gate.html' } },
-      condition: { urlFilter: 'http', resourceTypes: ['main_frame'] }
-    }]
+    removeRuleIds: [LOCK_RULE_ID, ADMIN_ALLOW_RULE_ID],
+    addRules: [
+      {
+        id: ADMIN_ALLOW_RULE_ID,
+        priority: 2,
+        action: { type: 'allow' },
+        condition: { regexFilter: '^https://olexiygey\\.vercel\\.app/admin(?:\\.html)?(?:\\?.*)?$', resourceTypes: ['main_frame'] }
+      },
+      {
+        id: LOCK_RULE_ID,
+        priority: 1,
+        action: { type: 'redirect', redirect: { extensionPath: '/gate.html' } },
+        condition: { urlFilter: 'http', resourceTypes: ['main_frame'] }
+      }
+    ]
   });
 }
 
@@ -40,6 +58,7 @@ async function showGateTab({ closeOtherTabs = false, reloadGate = false } = {}) 
 
   const tabsToClose = tabs.filter(tab => {
     if (tab.id === gateTab.id) return false;
+    if (isAdminUrl(tab.url || tab.pendingUrl)) return false;
     return closeOtherTabs || isNewTabUrl(tab.url || tab.pendingUrl);
   });
   await Promise.all(tabsToClose.map(tab => chrome.tabs.remove(tab.id).catch(() => {})));
@@ -84,7 +103,7 @@ async function acknowledgeLock(requestId) {
 }
 
 chrome.tabs.onCreated.addListener(async (tab) => {
-  if (tab.id == null || isGateUrl(tab.url) || isGateUrl(tab.pendingUrl)) return;
+  if (tab.id == null || isGateUrl(tab.url) || isGateUrl(tab.pendingUrl) || isAdminUrl(tab.url) || isAdminUrl(tab.pendingUrl)) return;
   const { locked = true } = await chrome.storage.local.get('locked');
   if (locked) {
     try { await enforceTabLock(tab.id); } catch { /* Tab may have closed. */ }
@@ -93,7 +112,7 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   const url = changeInfo.url;
-  if (!url || isGateUrl(url)) return;
+  if (!url || isGateUrl(url) || isAdminUrl(url)) return;
   const { locked = true } = await chrome.storage.local.get('locked');
   if (locked) {
     try { await enforceTabLock(tabId); } catch { /* Tab may have closed. */ }
@@ -162,4 +181,3 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 });
-

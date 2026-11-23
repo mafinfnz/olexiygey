@@ -8,8 +8,8 @@
   --white: #ffffff;
   --hairline: #e0e0e0;
   --pearl: #fafafc;
-  --display: "Geist", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --text: "Geist", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --display: "Geist";
+  --text: "Geist";
 }
 
 * { box-sizing: border-box; }
