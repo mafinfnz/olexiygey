@@ -136,6 +136,9 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     return;
   }
   chrome.alarms.create('session-check', { periodInMinutes: 0.5 });
+  const { locked = true } = await chrome.storage.local.get('locked');
+  if (locked) await lockBrowser();
+  else await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [LOCK_RULE_ID, ADMIN_ALLOW_RULE_ID] });
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
