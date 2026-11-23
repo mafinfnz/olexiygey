@@ -7,33 +7,6 @@ codeInput.addEventListener('input', () => {
   if (codeInput.value !== digitsOnly) codeInput.value = digitsOnly;
 });
 
-async function restoreExistingSession() {
-  try {
-    const {token} = await chrome.storage.local.get('token');
-    if (!token) return;
-
-    const response = await fetch(`${SERVER}/api/session`, {
-      method: 'POST',
-      headers: {'content-type': 'application/json'},
-      body: JSON.stringify({token})
-    });
-    if (!response.ok) {
-      await chrome.storage.local.remove('token');
-      return;
-    }
-
-    const result = await chrome.runtime.sendMessage({type: 'UNLOCK'});
-    if (!result?.ok) throw new Error('Не удалось восстановить доступ.');
-
-    const currentTab = await chrome.tabs.getCurrent();
-    await chrome.tabs.create({active: true});
-    if (currentTab?.id != null) await chrome.tabs.remove(currentTab.id);
-  } catch {
-    $('status').textContent = 'Не удалось восстановить доступ. Введите код ещё раз.';
-  }
-}
-
-restoreExistingSession();
 $('form').onsubmit = async (e) => {
   e.preventDefault();
   const enteredCode = codeInput.value;
