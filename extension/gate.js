@@ -26,7 +26,8 @@ async function restoreExistingSession() {
     if (!result?.ok) throw new Error('Не удалось восстановить доступ.');
 
     const currentTab = await chrome.tabs.getCurrent();
-    if (currentTab?.id != null) await chrome.tabs.update(currentTab.id, {url: 'chrome://newtab'});
+    await chrome.tabs.create({active: true});
+    if (currentTab?.id != null) await chrome.tabs.remove(currentTab.id);
   } catch {
     $('status').textContent = 'Не удалось восстановить доступ. Введите код ещё раз.';
   }
