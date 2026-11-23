@@ -47,6 +47,13 @@ async function showGateTab({ closeOtherTabs = false, reloadGate = false } = {}) 
   await chrome.tabs.update(gateTab.id, { active: true });
 }
 
+async function lockOnStartup() {
+  chrome.alarms.create('session-check', { periodInMinutes: 0.5 });
+  await chrome.storage.local.remove('token');
+  await lockBrowser();
+  await showGateTab({ closeOtherTabs: true, reloadGate: true });
+}
+
 async function acknowledgeLock(requestId) {
   if (!requestId) return;
   try {
@@ -56,46 +63,6 @@ async function acknowledgeLock(requestId) {
       body: JSON.stringify({ requestId })
     });
   } catch { /* The server status will remain unconfirmed if this request fails. */ }
-}
-
-async function restoreSession() {
-  const { token, locked = true } = await chrome.storage.local.get(['token', 'locked']);
-  if (!token) {
-    await lockBrowser();
-    return { unlocked: false, closeOtherTabs: true };
-  }
-
-  try {
-    const response = await fetch(`${SERVER}/api/session`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ token })
-    });
-
-    if (response.ok) {
-      await unlockBrowser();
-      return { unlocked: true, closeOtherTabs: false };
-    }
-
-    if (response.status === 401 || response.status === 403) {
-      const data = await response.json().catch(() => ({}));
-      await chrome.storage.local.remove('token');
-      await lockBrowser();
-      await showGateTab({ closeOtherTabs: true, reloadGate: true });
-      await acknowledgeLock(data.requestId);
-      return { unlocked: false, closeOtherTabs: false };
-    }
-  } catch { /* Keep the last local state while the control server is unreachable. */ }
-
-  if (locked) await lockBrowser();
-  else await unlockBrowser();
-  return { unlocked: !locked, closeOtherTabs: false };
-}
-
-async function prepareBrowser() {
-  chrome.alarms.create('session-check', { periodInMinutes: 0.5 });
-  const { unlocked, closeOtherTabs } = await restoreSession();
-  if (!unlocked) await showGateTab({ closeOtherTabs });
 }
 
 chrome.tabs.onCreated.addListener(async (tab) => {
@@ -133,16 +100,17 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
-chrome.runtime.onStartup.addListener(prepareBrowser);
-chrome.action.onClicked.addListener(() => showGateTab());
+chrome.runtime.onStartup.addListener(lockOnStartup);
+chrome.action.onClicked.addListener(async () => {
+  const { locked = true } = await chrome.storage.local.get('locked');
+  if (locked) await showGateTab();
+});
 chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
-    await lockBrowser();
-    chrome.alarms.create('session-check', { periodInMinutes: 0.5 });
-    await showGateTab({ closeOtherTabs: true });
+    await lockOnStartup();
     return;
   }
-  await prepareBrowser();
+  chrome.alarms.create('session-check', { periodInMinutes: 0.5 });
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
