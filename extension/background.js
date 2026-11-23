@@ -47,6 +47,24 @@ async function showGateTab({ closeOtherTabs = false, reloadGate = false } = {}) 
   await chrome.tabs.update(gateTab.id, { active: true });
 }
 
+async function enforceTabLock(tabId) {
+  const tabs = await chrome.tabs.query({});
+  const existingGate = tabs.find(tab => tab.id !== tabId && (isGateUrl(tab.url) || isGateUrl(tab.pendingUrl)));
+  if (existingGate?.id != null) {
+    await chrome.tabs.remove(tabId).catch(() => {});
+    await chrome.tabs.update(existingGate.id, { active: true }).catch(() => {});
+    return;
+  }
+
+  try {
+    await chrome.tabs.update(tabId, { url: GATE });
+  } catch {
+    const gateTab = await chrome.tabs.create({ url: GATE, active: true });
+    await chrome.tabs.remove(tabId).catch(() => {});
+    return gateTab;
+  }
+}
+
 async function lockOnStartup() {
   chrome.alarms.create('session-check', { periodInMinutes: 0.5 });
   await chrome.storage.local.remove('token');
@@ -69,38 +87,26 @@ chrome.tabs.onCreated.addListener(async (tab) => {
   if (tab.id == null || isGateUrl(tab.url) || isGateUrl(tab.pendingUrl)) return;
   const { locked = true } = await chrome.storage.local.get('locked');
   if (locked) {
-    try {
-      const tabs = await chrome.tabs.query({});
-      const existingGate = tabs.find(item => item.id !== tab.id && (isGateUrl(item.url) || isGateUrl(item.pendingUrl)));
-      if (existingGate?.id != null) {
-        await chrome.tabs.remove(tab.id);
-        await chrome.tabs.update(existingGate.id, { active: true });
-      } else {
-        await chrome.tabs.update(tab.id, { url: GATE });
-      }
-    } catch { /* Tab may have closed. */ }
+    try { await enforceTabLock(tab.id); } catch { /* Tab may have closed. */ }
   }
 });
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  const url = changeInfo.url || tab.pendingUrl || tab.url;
-  if (!isNewTabUrl(url)) return;
+  const url = changeInfo.url;
+  if (!url || isGateUrl(url)) return;
   const { locked = true } = await chrome.storage.local.get('locked');
   if (locked) {
-    try {
-      const tabs = await chrome.tabs.query({});
-      const existingGate = tabs.find(item => item.id !== tabId && (isGateUrl(item.url) || isGateUrl(item.pendingUrl)));
-      if (existingGate?.id != null) {
-        await chrome.tabs.remove(tabId);
-        await chrome.tabs.update(existingGate.id, { active: true });
-      } else {
-        await chrome.tabs.update(tabId, { url: GATE });
-      }
-    } catch { /* Tab may have closed. */ }
+    try { await enforceTabLock(tabId); } catch { /* Tab may have closed. */ }
   }
 });
 
 chrome.runtime.onStartup.addListener(lockOnStartup);
+chrome.storage.onChanged.addListener(async (changes, areaName) => {
+  if (areaName !== 'local' || !chrome.extension.inIncognitoContext || changes.locked?.newValue !== true) return;
+  try {
+    await showGateTab({ closeOtherTabs: true, reloadGate: true });
+  } catch { /* Incognito tabs will still be redirected by the dynamic rule. */ }
+});
 chrome.action.onClicked.addListener(async () => {
   const { locked = true } = await chrome.storage.local.get('locked');
   if (locked) await showGateTab();
