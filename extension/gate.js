@@ -7,7 +7,7 @@ const setStatus = (message, state) => {
   else $('status').textContent = message;
 };
 
-motion?.enter(document.querySelector('.access'), 'h1, .intro, form, #status, .footnote');
+motion?.enter(document.querySelector('.access'), 'h1, .intro, form > *, #status, .footnote');
 document.querySelectorAll('button').forEach((button) => button.addEventListener('pointerdown', () => motion?.pulse(button)));
 
 codeInput.addEventListener('input', () => {

@@ -31,8 +31,8 @@
     motion?.enter(document.querySelector('main'),'h1, main > p, label, input, button, #code, #status, .note');
     document.querySelectorAll('button').forEach(button=>button.addEventListener('pointerdown',()=>motion?.pulse(button)));
     const setStatus=(message,state='neutral')=>{if(motion)motion.setStatus(status,message,state);else{status.textContent=message;status.dataset.state=state;}};
-    const showCode=()=>{code.classList.remove('hidden');copy.classList.remove('hidden');motion?.reveal(code);motion?.reveal(copy);};
-    const hideCode=()=>{code.classList.add('hidden');copy.classList.add('hidden');};
+    const showCode=()=>{if(motion){motion.show(code);motion.show(copy);}else{code.classList.remove('hidden');copy.classList.remove('hidden');}};
+    const hideCode=()=>{if(motion){motion.hide(code);motion.hide(copy);}else{code.classList.add('hidden');copy.classList.add('hidden');}};
     issue.addEventListener('click',async()=>{
       setStatus('Создаю код…'); hideCode();
       try{
