@@ -7,13 +7,8 @@ const setStatus = (message, state) => {
   else $('status').textContent = message;
 };
 
-motion?.enter(document.querySelector('.access'), 'h1, .intro, #incognito-warning, form, #status, .footnote');
+motion?.enter(document.querySelector('.access'), 'h1, .intro, form, #status, .footnote');
 document.querySelectorAll('button').forEach((button) => button.addEventListener('pointerdown', () => motion?.pulse(button)));
-
-chrome.extension.isAllowedIncognitoAccess((allowed) => {
-  const warning = $('incognito-warning');
-  if (warning) warning.hidden = allowed;
-});
 
 codeInput.addEventListener('input', () => {
   const digitsOnly = codeInput.value.replace(/\D/g, '').slice(0, 6);
