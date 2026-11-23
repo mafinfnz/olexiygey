@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "incognito": "split",
   "name": "Code Gate",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Startup gate for Chromium using one-time codes issued by an administrator.",
   "icons": {
     "48": "icons/icon-48.png",
