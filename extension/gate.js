@@ -1,6 +1,14 @@
 const $ = (id) => document.getElementById(id);
 const SERVER = 'https://olexiygey.vercel.app';
 const codeInput = $('code');
+const motion = window.CodeGateMotion;
+const setStatus = (message, state) => {
+  if (motion) motion.setStatus($('status'), message, state);
+  else $('status').textContent = message;
+};
+
+motion?.enter(document.querySelector('.access'), 'h1, .intro, #incognito-warning, form, #status, .footnote');
+document.querySelectorAll('button').forEach((button) => button.addEventListener('pointerdown', () => motion?.pulse(button)));
 
 chrome.extension.isAllowedIncognitoAccess((allowed) => {
   const warning = $('incognito-warning');
@@ -16,19 +24,18 @@ $('form').onsubmit = async (e) => {
   e.preventDefault();
   const enteredCode = codeInput.value;
   if (!/^\d{6}$/.test(enteredCode)) {
-    $('status').textContent = 'Введите код из 6 цифр.';
+    setStatus('Введите код из 6 цифр.', 'error');
     $('code').setAttribute('aria-invalid', 'true');
     $('code').focus();
     return;
   }
   $('code').removeAttribute('aria-invalid');
-  $('status').textContent = 'Проверяю код…';
+  setStatus('Проверяю код…', 'neutral');
   try {
     const r = await fetch(`${SERVER}/api/verify`, {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:enteredCode})});
     const data = await r.json(); if (!r.ok) throw new Error(data.error || 'Код не подошёл');
     await chrome.storage.local.set({token:data.token});
     await chrome.runtime.sendMessage({type:'UNLOCK'});
-    $('status').textContent = 'Доступ открыт. Теперь поиск и сайты доступны.';
-  } catch(err) { $('status').textContent = err.message === 'Failed to fetch' ? 'Нет связи с сервером.' : /invalid or expired code/i.test(err.message) ? 'Неправильный код' : err.message; }
+    setStatus('Доступ открыт. Теперь поиск и сайты доступны.', 'success');
+  } catch(err) { setStatus(err.message === 'Failed to fetch' ? 'Нет связи с сервером.' : /invalid or expired code/i.test(err.message) ? 'Неправильный код' : err.message, 'error'); }
 };
-
