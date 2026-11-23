@@ -2,6 +2,11 @@ const $ = (id) => document.getElementById(id);
 const SERVER = 'https://olexiygey.vercel.app';
 const codeInput = $('code');
 
+chrome.extension.isAllowedIncognitoAccess((allowed) => {
+  const warning = $('incognito-warning');
+  if (warning) warning.hidden = allowed;
+});
+
 codeInput.addEventListener('input', () => {
   const digitsOnly = codeInput.value.replace(/\D/g, '').slice(0, 6);
   if (codeInput.value !== digitsOnly) codeInput.value = digitsOnly;
