@@ -53,14 +53,19 @@
       if (statusRuns.get(element) !== run) return;
       element.textContent = message;
       element.dataset.state = state;
+      if (!message) {
+        resetVisualStyles(element);
+        return;
+      }
       if (reducedMotion || !anime) return;
       anime.animate(element, { opacity: [0, 1], translateY: [4, 0], duration: 240, ease: 'outCubic', onComplete: () => {
         if (statusRuns.get(element) === run) resetVisualStyles(element);
       } });
     };
     if (reducedMotion || !anime || !element.textContent) return apply();
+    const opacity = Number.parseFloat(getComputedStyle(element).opacity) || 1;
     anime.remove(element);
-    anime.animate(element, { opacity: [1, 0], translateY: [0, -3], duration: 120, ease: 'inQuad', onComplete: apply });
+    anime.animate(element, { opacity: [opacity, 0], translateY: [0, -3], duration: 140, ease: 'inQuad', onComplete: apply });
   };
   const enter = (root, selector) => {
     if (!root || reducedMotion || !anime) return;

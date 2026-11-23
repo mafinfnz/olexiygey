@@ -13,6 +13,8 @@ document.querySelectorAll('button').forEach((button) => button.addEventListener(
 codeInput.addEventListener('input', () => {
   const digitsOnly = codeInput.value.replace(/\D/g, '').slice(0, 6);
   if (codeInput.value !== digitsOnly) codeInput.value = digitsOnly;
+  if ($('status').dataset.state === 'error') setStatus('', 'neutral');
+  codeInput.removeAttribute('aria-invalid');
 });
 
 $('form').onsubmit = async (e) => {
