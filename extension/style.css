@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Geist";
+  src: url("assets/Geist-Variable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: block;
+}
+
 :root {
   color-scheme: light;
   --blue: #0066cc;
@@ -8,8 +16,8 @@
   --white: #ffffff;
   --hairline: #e0e0e0;
   --pearl: #fafafc;
-  --display: "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --text: "SF Pro Text", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --display: "Geist", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --text: "Geist", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -92,26 +100,6 @@ button:active { transform: scale(.95); }
   color: var(--ink);
   font-size: 14px;
   font-weight: 400;
-  line-height: 1.43;
-  letter-spacing: -.224px;
-}
-
-.settings { margin: 20px auto 0; color: var(--blue); font-size: 14px; text-align: center; }
-.settings summary { width: max-content; margin: auto; cursor: pointer; list-style: none; }
-.settings summary::-webkit-details-marker { display: none; }
-.settings summary::after { content: " +"; }
-.settings[open] summary::after { content: " −"; }
-.server-label { display: block; margin: 18px 0 8px; color: var(--muted); text-align: left; }
-.settings input { text-align: left; }
-.secondary {
-  min-height: 40px;
-  margin-top: 12px;
-  padding: 8px 14px;
-  border: 0;
-  border-radius: 11px;
-  background: var(--pearl);
-  color: #333333;
-  font-size: 14px;
   line-height: 1.43;
   letter-spacing: -.224px;
 }
